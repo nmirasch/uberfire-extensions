@@ -26,28 +26,43 @@ public class ColumnMeta<T> implements Comparable {
     private int position = -1;
     private boolean extraColumn;
     
+    private String column_id;
+
+    public ColumnMeta(Column<T, ?> column,
+            String caption,
+            String column_id) {
+        this.column =column;
+        this.caption=caption;
+        this.column_id=column_id;
+
+    }
     public ColumnMeta(Column<T, ?> column,
                       String caption) {
-        this.column = column;
-        this.caption = caption;
+        this(column,caption,caption);
     }
 
     public ColumnMeta(Column<T, ?> column,
                       String caption,
                       boolean visible) {
-        this.column = column;
-        this.caption = caption;
+        this(column,caption);
         this.visible = visible;
     }
+
 
     public ColumnMeta(Column<T, ?> column,
                       String caption,
                       boolean visible,
                       int position) {
-        this.column = column;
-        this.caption = caption;
-        this.visible = visible;
+        this(column,caption,visible);
         this.position = position;
+    }
+
+    public String getColumn_id() {
+        return column_id;
+    }
+
+    public void setColumn_id(String column_id) {
+        this.column_id = column_id;
     }
 
     public ColumnMeta(Column<T, ?> column, String caption,boolean visible, boolean extraColumn) {
