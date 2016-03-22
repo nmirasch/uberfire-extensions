@@ -23,6 +23,7 @@ import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasEnabled;
@@ -238,12 +239,53 @@ public class DatePicker extends Composite
      * Set the format of the Date shown in the TextBox component.
      * This is converted to BS3's Date Format that the underlying jQuery-based BS3 DatePicker
      * uses to convert values in the TextBox to selections in the popup date picker element.
-     * @param gwtDateFormat
+     * @param dateFormat
      */
-    public void setFormat( final String gwtDateFormat ) {
-        this.gwtDateFormat = gwtDateFormat;
-        this.gwtDateTimeFormat = DateTimeFormat.getFormat( this.gwtDateFormat );
-        datePicker.setFormat( DatePickerFormatUtilities.convertToBS3DateFormat( gwtDateFormat ) );
+    public void setFormat(final String dateFormat) {
+        String activeLocale = LocaleInfo.getCurrentLocale().getLocaleName();
+        DatePickerLanguage datePickerLanguage = DatePickerLanguage.EN;
+        DatePickerDayOfWeek weekStart = DatePickerDayOfWeek.SUNDAY;
+        String format = dateFormat;
+        if (activeLocale.equals("es")) {
+            datePickerLanguage = DatePickerLanguage.ES;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+            format = setDateFormatWithMonthNumbers(dateFormat); //incompatible date formatting DateTimeFormatInfoImpl_es and
+        } else if (activeLocale.equals("fr")) {
+            datePickerLanguage = DatePickerLanguage.FR;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("ja")) {
+            datePickerLanguage = DatePickerLanguage.JA;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        } else if (activeLocale.equals("pt_BR")) {
+            datePickerLanguage = DatePickerLanguage.PT_BR;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("zh_CN")) {
+            datePickerLanguage = DatePickerLanguage.ZH_CN;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        } else if (activeLocale.equals("de")) {
+            datePickerLanguage = DatePickerLanguage.DE;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+            format = setDateFormatWithMonthNumbers(dateFormat); //incompatible date formatting DateTimeFormatInfoImpl_es and
+        } else if (activeLocale.equals("ru")) {
+            datePickerLanguage = DatePickerLanguage.RU;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("zh-TW")) {
+            datePickerLanguage = DatePickerLanguage.ZH_TW;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        }
+        this.gwtDateFormat = format;
+        this.gwtDateTimeFormat = DateTimeFormat.getFormat(this.gwtDateFormat);
+
+        datePicker.setLanguage(datePickerLanguage);
+        datePicker.setWeekStart(weekStart);
+
+        datePicker.setFormat(DatePickerFormatUtilities.convertToBS3DateFormat(this.gwtDateFormat));
+    }
+
+    private String setDateFormatWithMonthNumbers(String format){
+        String formatWithoutMonthNames = format.replace("MMMM","MM");
+        formatWithoutMonthNames = formatWithoutMonthNames.replace("MMM","MM");
+        return formatWithoutMonthNames;
     }
 
     @Override
