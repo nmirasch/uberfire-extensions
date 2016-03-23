@@ -23,6 +23,7 @@ import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasEnabled;
@@ -99,18 +100,29 @@ public class DatePicker extends Composite
 
     private final boolean allowEmptyValues;
 
-    private final org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker datePicker = new org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker();
+    private final org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker datePicker;
 
     public DatePicker() {
         this( true );
     }
 
+    /**
+     * Basic constuctor of uberfire datePicker without setting the datepicker container and without setting the hide
+     * handler to manage the interaction with org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker popup
+     * @param datePicker
+     */
+    public DatePicker(org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker datePicker) {
+        this.datePicker = datePicker;
+        this.allowEmptyValues = true;
+    }
+
     public DatePicker( final boolean allowEmptyValues ) {
+        datePicker = new org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker();
         this.allowEmptyValues = allowEmptyValues;
         datePicker.setContainer( RootPanel.get() );
 
         datePicker.setAutoClose( true );
-        datePicker.setFormat( DatePickerFormatUtilities.convertToBS3DateFormat( gwtDateFormat ) );
+        setFormat(gwtDateFormat);
 
         //When the popup Date Picker component is hidden assert empty values
         datePicker.addHideHandler( new HideHandler() {
@@ -238,12 +250,75 @@ public class DatePicker extends Composite
      * Set the format of the Date shown in the TextBox component.
      * This is converted to BS3's Date Format that the underlying jQuery-based BS3 DatePicker
      * uses to convert values in the TextBox to selections in the popup date picker element.
-     * @param gwtDateFormat
+     * @param dateFormat
      */
-    public void setFormat( final String gwtDateFormat ) {
-        this.gwtDateFormat = gwtDateFormat;
+    public void setFormat( final String dateFormat ) {
+        setFormat(LocaleInfo.getCurrentLocale().getLocaleName(),dateFormat);
+    }
+
+    public void setFormat(String currentLang,  final String dateFormat) {
+        this.gwtDateFormat = setDatePickerLangProperties(currentLang, dateFormat);
         this.gwtDateTimeFormat = DateTimeFormat.getFormat( this.gwtDateFormat );
-        datePicker.setFormat( DatePickerFormatUtilities.convertToBS3DateFormat( gwtDateFormat ) );
+        datePicker.setFormat(DatePickerFormatUtilities.convertToBS3DateFormat(this.gwtDateFormat));
+    }
+
+    /**
+     * Sets the org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker language and week start day
+     * depending on the activeLocale passed as parameter.
+     * There are incompatibilities between DateTimeFormatInfoImpl and DatePickerResourceBundles for es and de locales.
+     * This function modify in that cases the dateFormat to avoid show the name of the months
+     * TODO review locales es and de showing the name of the month.
+     * @param activeLocale
+     * @param dateFormat
+     * @return the dateformat to be applied depending of locale. In case of es and de, avoiding show the name of month
+     */
+    private String setDatePickerLangProperties(String activeLocale, String dateFormat){
+        DatePickerLanguage datePickerLanguage = DatePickerLanguage.EN;
+        DatePickerDayOfWeek weekStart = DatePickerDayOfWeek.SUNDAY;
+        String format = dateFormat;
+        if (activeLocale.equals("es")) {
+            datePickerLanguage = DatePickerLanguage.ES;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+            //incompatible date formatting DateTimeFormatInfoImpl_de and DatePickerClientBundle.INSTANCE.es()
+            format = getDateFormatWithoutMonthNames(dateFormat);
+        } else if (activeLocale.equals("fr")) {
+            datePickerLanguage = DatePickerLanguage.FR;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("ja")) {
+            datePickerLanguage = DatePickerLanguage.JA;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        } else if (activeLocale.equals("pt_BR")) {
+            datePickerLanguage = DatePickerLanguage.PT_BR;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("zh_CN")) {
+            datePickerLanguage = DatePickerLanguage.ZH_CN;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        } else if (activeLocale.equals("de")) {
+            datePickerLanguage = DatePickerLanguage.DE;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+            //incompatible date formatting DateTimeFormatInfoImpl_de and DatePickerClientBundle.INSTANCE.de()
+            format = getDateFormatWithoutMonthNames(dateFormat);
+        } else if (activeLocale.equals("ru")) {
+            datePickerLanguage = DatePickerLanguage.RU;
+            weekStart = DatePickerDayOfWeek.MONDAY;
+        } else if (activeLocale.equals("zh-TW")) {
+            datePickerLanguage = DatePickerLanguage.ZH_TW;
+            weekStart = DatePickerDayOfWeek.SUNDAY;
+        }
+        datePicker.setLanguage(datePickerLanguage);
+        datePicker.setWeekStart(weekStart);
+        return format;
+    }
+
+    /**
+     * Modify the format passed as parameter to not show month names. (MMMM -> MM and MMM->MM)
+     * @param format gwt Date Format
+     * @return the date formatting pattern with month numbers instead names
+     */
+    private String getDateFormatWithoutMonthNames(String format){
+        String formatWithoutMonthNames = format.replace("MMMM","MM");
+        formatWithoutMonthNames = formatWithoutMonthNames.replace("MMM","MM");
+        return formatWithoutMonthNames;
     }
 
     @Override
